@@ -24,7 +24,7 @@ class Object
 
 class Symbol
   def call(objeto)
-    objeto.class.send(:attr_accessor,self)
+    objeto.singleton_class.send(:attr_accessor,self)
   end
 end
   class Proc
