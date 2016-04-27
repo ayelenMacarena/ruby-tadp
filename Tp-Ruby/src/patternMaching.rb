@@ -1,3 +1,5 @@
+require 'pry'
+
 class Object
 
 
@@ -9,22 +11,42 @@ class Object
     Proc.new{|x| x.class.ancestors.include?(unTipo)}
   end
 
+  #TODO: checkear si el tamaño de la lista se considera para ambas
+  #TODO: revisar lo del matcher de variables
   def list(anArray, compare_size=true)
     Proc.new{|x|
       size = anArray.size;
-      valid = x[0..size-1] == anArray;
-      if not compare_size
-        valid
+      valid = compareElements(anArray,x[0..size-1]);
+      if compare_size
+        (size==(x.size)) && valid
       else
-        (size==(x.size)) &&valid
+        valid
       end
-
     }
   end
+  
+  def compareElements(array1, array2)
+    i=-1;
+    array1.all? { |item|
+      i+=1
+      if item.instance_of?(Symbol)
+        item.call(array2[i])
+      else
+        val(item).call(array2[i])
+      end
 
+        }
+  end
+  
 end
 
+class Symbol
+  def call(object)
+   true
+  end
+end
 
+binding.pry
 #  def define_singleton_method(*args, &block){
 #
 #  }
