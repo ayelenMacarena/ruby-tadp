@@ -1,5 +1,23 @@
-class Matching
+class Entorno
+attr_accessor :b1
+  def get_binding
+    b1=binding
+  end
+  def setea(symbol,valor)
+    self.singleton_class.send(:attr_accessor, symbol)
+    self.send("#{symbol}=".to_sym,valor)
+    get_binding
+  end
+  def ejecuta(&block)
+    instance_exec(&block)
+  end
+  def mostrar_bloque
+    "#{yield}"
+  end
+end
 
+class Matching
+ attr_accessor :e1
   def val(parametro)
     Evaluation.new{|x| x == parametro}
   end
@@ -12,32 +30,36 @@ class Matching
     Evaluation.new{|x| methods.all?{|m| x.methods.include?(m)}}
   end
 
-  def compareElements(array1, array2)
+ def list(anArray, compare_size=true)
+   Proc.new{|x|
+     size = anArray.size;
+     valid = compareElements(anArray,x[0..size-1]);
+     if compare_size
+       (size==(x.size)) && valid
+     else
+       valid
+     end
+   }
+ end
 
-  end
+ def compareElements(array1, array2)
+   i=-1;
+   array1.all? { |item|
+     i+=1
+     if item.instance_of?(Symbol)
+       item.call(array2[i])
+     else
+       val(item).call(array2[i])
+     end
 
-  def list(anArray, compare_size=true)
-  # Agregar al caso de symbol en el list (que tiene lea) la asignación de accessors y de los valores
-          # y listo.
-
-    Evaluation.new{|x|
-      size = anArray.size;
-      valid = x[0..size-1] == anArray;
-      if not compare_size
-        valid
-      else
-        (size==(x.size)) &&valid
-      end
-
-    }
-  end
-  
+   }
+ end
   def symbol()
   # que devuelva un symbol bindeado al matcher y el .call le asigna el valor .
   end
 
-  def with(*matchers)
-    Evaluation.new{|x| Evaluation.new{|x| true}.and(*matchers).call(x)? yield : nil}
+  def with(*matchers, &block)
+    Evaluation.new{|x| Evaluation.new{|x| true}.and(*matchers).call(x)? e1.ejecuta(&block) : nil}
   end
 
   def match?(algo, &bloque)
@@ -46,8 +68,6 @@ class Matching
 
 
 end
-
-
 
 class Evaluation < Proc
 
@@ -69,13 +89,14 @@ class Evaluation < Proc
 
 end
 
-class MySymbol < Symbol
+class Symbol
 
-  def call(object, marcher= nil)
-    algo? marcher.send(attr_accessor,self); marcher.send(self,object); true
-
+  def call(valor, entorno)
+   entorno.setea(self,valor)
     end
 end
-
+peterMachine=Matching.new
+peterMachine.e1=Entorno.new
+irb peterMachine
 
 
