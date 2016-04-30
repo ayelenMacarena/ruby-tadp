@@ -1,23 +1,24 @@
+
 class Entorno
-attr_accessor :b1
-  def get_binding
-    b1=binding
-  end
   def setea(symbol,valor)
     self.singleton_class.send(:attr_accessor, symbol)
     self.send("#{symbol}=".to_sym,valor)
-    get_binding
   end
   def ejecuta(&block)
     instance_exec(&block)
   end
-  def mostrar_bloque
-    "#{yield}"
-  end
 end
 
+module ConstModule
+  e1=Entorno.new
+  E1=e1
+end
+
+include ConstModule
+
 class Matching
- attr_accessor :e1
+  attr_accessor :e1
+
   def val(parametro)
     Evaluation.new{|x| x == parametro}
   end
@@ -46,7 +47,8 @@ class Matching
    i=-1;
    array1.all? { |item|
      i+=1
-     if item.instance_of?(Symbol)
+     t=item
+     if t.instance_of?(Symbol)
        item.call(array2[i])
      else
        val(item).call(array2[i])
@@ -54,17 +56,18 @@ class Matching
 
    }
  end
-  def symbol()
-  # que devuelva un symbol bindeado al matcher y el .call le asigna el valor .
-  end
 
   def with(*matchers, &block)
     Evaluation.new{|x| Evaluation.new{|x| true}.and(*matchers).call(x)? e1.ejecuta(&block) : nil}
   end
 
-  def match?(algo, &bloque)
-    bloque.call(algo)
+  def otherwise (&block)
+    Evaluation.new{|x| e1.ejecuta(&block)}
   end
+
+  #def match?(algo, &bloque)
+ #bloque.call(algo)
+  #end
 
 
 end
@@ -91,12 +94,15 @@ end
 
 class Symbol
 
-  def call(valor, entorno)
-   entorno.setea(self,valor)
-    end
+  def call(valor, entorno=E1)
+    entorno.setea(self,valor)
+  end
 end
+
+
 peterMachine=Matching.new
-peterMachine.e1=Entorno.new
+peterMachine.e1=E1
 irb peterMachine
+
 
 
