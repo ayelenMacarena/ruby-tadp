@@ -1,14 +1,3 @@
-class Entorno
-  def setea(symbol, valor)
-    self.singleton_class.send(:attr_accessor, symbol)
-    self.send("#{symbol}=".to_sym, valor)
-  end
-
-  def ejecuta(&block)
-    instance_exec(&block)
-  end
-end
-
 class NoMatchingFoundException < Exception
 
 end
