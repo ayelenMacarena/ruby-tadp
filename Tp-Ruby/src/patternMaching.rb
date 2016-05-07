@@ -1,33 +1,58 @@
 class Object
 
-
-  def val(parametro)
-    Proc.new{|x| x == parametro}
-  end
-
-  def type(unTipo)
-    Proc.new{|x| x.class.ancestors.include?(unTipo)}
-  end
-
-  def list(anArray, compare_size=true)
-    Proc.new{|x|
-      size = anArray.size;
-      valid = x[0..size-1] == anArray;
-      if not compare_size
-        valid
+  def val(valor)
+    Proc.new do |parametro|
+      if valor == parametro
+        true
       else
-        (size==(x.size)) &&valid
+        false
       end
-
-    }
+    end
   end
+
+  def type(tipo)
+    Proc.new do |valor|
+      if (valor.class).ancestors.include? tipo
+        true
+      else
+        false
+      end
+    end
+  end
+
+  def and(*matcher)
+    Proc.new do |objeto|
+      if matcher.all?{|match| match.call(objeto)}
+        self.call(objeto)
+      else
+        false
+      end
+    end
+
+  end
+
+  def or(*matcher)
+    Proc.new do |objeto|
+      if matcher.any?{|match| match.call(objeto)}
+        true
+      else
+        if self.call(objeto)
+          true
+        else
+          false
+        end
+      end
+    end
+
+  end
+
+  def not
+    Proc.new do |objeto|
+      not self.call(objeto)
+    end
+  end
+
+
 
 end
-
-
-#  def define_singleton_method(*args, &block){
-#
-#  }
-#  end
-
 
