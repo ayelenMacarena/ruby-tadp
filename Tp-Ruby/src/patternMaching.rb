@@ -61,13 +61,12 @@ class Matching
   def with(*matchers, &block)
 
     self.evaluations<< Evaluation.new{|x|
-                  #e1=Entorno.new
-                              if (Evaluation.new{|x| true}.and(*matchers).call(x))
+      if (Evaluation.new{|x| true}.and(*matchers).call(x))
 
-                              #matchers.each{|matcher| if(matcher.is_a?(Symbol))
-                                matchers.select{|match| match.call(x)!=true}.each{|evaluation|
+                                                matchers.select{|match| match.call(x)!=true}.each{|evaluation|
                                                         instance_exec(&(evaluation.call(x)))}
                                                         instance_exec(&block)
+                                                          true
                               else
                               false
                               end
@@ -83,8 +82,12 @@ class Matching
 
   def matches?(algo, &bloque)
     instance_exec(&bloque)
-    self.evaluations.select{|evaluation| evaluation.call(algo)}.first.call(algo)
-    #self.evaluations.clear
+    self.evaluations.each{ |evaluation| if(evaluation.call(algo))
+                                        break
+                                        end
+                                        
+    }
+    self.evaluations.clear
   end
 
 
