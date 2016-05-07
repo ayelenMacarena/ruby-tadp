@@ -1,46 +1,115 @@
-class Object
 
+class Entorno
+  def setea(symbol,valor)
+    self.singleton_class.send(:attr_accessor, symbol)
+    self.send("#{symbol}=".to_sym,valor)
+  end
+  def ejecuta(&block)
+    instance_exec(&block)
+  end
+end
 
+class Matching
+  attr_accessor :e1,:evaluations
+
+  def new(algo)
+    algo
+    self.e1=Entorno.new
+    self.evaluations=[]
+  end
   def val(parametro)
-    Proc.new{|x| x == parametro}
+    Evaluation.new{|x| x == parametro}
   end
 
   def type(unTipo)
-    (self.class==Object)? Proc.new{|x| x.class.ancestors.include?(unTipo)} : NoMethodError.new("NoMethodError",self.name,unTipo)
+    Evaluation.new{|x| x.class.ancestors.include?(unTipo)}
   end
-  def list(values,*match_size)
-    (self.class==Object)? (Proc.new{|x| ((values.size>=x.size) ? values.take(x.size)==x : x.take(values.size)==values)&&
-        ((match_size.size>=1&& match_size.first)? values.size==x.size : true)
-    }) : NoMethodError.new("NoMethodError",self.name,values,*match_size)
-  end
-  def duck(*methods)
-    (self.class==Object)? (Proc.new{|x| methods.all?{|method| x.methods.include?(method)}}) : NoMethodError.new("NoMethodError",self.name,*methods)
-  end
-  #def with *matchers,&block
-  #  matchers.inject{|match1, match2| match1.and(match2)} &block
- # end
 
+  def duck(*methods)
+    Evaluation.new{|x| methods.all?{|m| x.methods.include?(m)}}
   end
+
+ def list(anArray, compare_size=true)
+   Proc.new{|x|
+     size = anArray.size;
+     valid = compareElements(anArray,x[0..size-1]);
+     if compare_size
+       (size==(x.size)) && valid
+     else
+       valid
+     end
+   }
+ end
+
+ def compareElements(array1, array2)
+   i=-1;
+   array1.all? { |item|
+     i+=1
+     t=item
+     if t.instance_of?(Symbol)
+       item.call(array2[i])
+     else
+       val(item).call(array2[i])
+     end
+
+   }
+ end
+
+  def with(*matchers, &block)
+    unEv=Evaluation.new{|x| if(Evaluation.new{|x| true}.and(*matchers).call(x))
+                              matchers.each{|matcher| if(matcher.is_a?(Symbol))
+                                                        e1.instance_exec(matcher.call(x))
+                                                      end
+                                           }
+                              e1.instance_exec(&block)
+                              e1=Entorno.new
+                              true
+                            end
+    }
+    evaluations+=unEv
+  end
+
+  def otherwise (&block)
+    Evaluation.new{|x| e1.ejecuta(&block)}
+  end
+
+  def matches?(algo, &bloque)
+  instance_exec(&bloque)
+    evaluations.select{|evaluation| evaluation.call(algo)==true }.call(algo)
+    @evaluations=[]
+  end
+
+
+end
+
+class Evaluation < Proc
+
+
+  def and(*otherEvaluations)
+    Evaluation.new{|x| self.call(x) && otherEvaluations.all?{|eval| eval.call(x)}}
+  end
+
+  def or(*evaluations)
+    Evaluation.new{|x| self.call(x) || evaluations.any?{|eval| eval.call(x)}}
+  end
+
+  def not
+    Evaluation.new{|x| not self.call(x)}
+  end
+
+end
 
 class Symbol
-  def call(objeto)
-    objeto.singleton_class.send(:attr_accessor,self)
+
+  def call(valor)
+    Proc.new{  singleton_class.send(:attr_accessor, self)
+              send("#{self}=".to_sym,valor) }
+
   end
 end
-  class Proc
-    def and(otroProc)
-      Proc.new{|x| self.call(x) && otroProc.call(x)}
-    end
-    def or(otroProc)
-      Proc.new{|x| self.call(x) || otroProc.call(x)}
-    end
-    def not()
-      Proc.new{|x| not self.call(x)}
-    end
-  end
-#  def define_singleton_method(*args, &block){
-#
-#  }
-#  end
+
+peterMachine=Matching.new(true)
+irb peterMachine
+
 
 
