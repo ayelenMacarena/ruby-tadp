@@ -85,7 +85,7 @@ class Matching
     self.evaluations.each{ |evaluation| if(evaluation.call(algo))
                                         break
                                         end
-                                        
+
     }
     self.evaluations.clear
   end
