@@ -34,27 +34,32 @@ class Matching
 
   def list(anArray, compare_size=true)
     Proc.new { |x|
-
+      begin
       evaluations = []
       list = []
       if compare_size
-        anArray.size == x.size
-        list = x
+        if anArray.size == x.size
+          list = x
+        else
+          false
+        end
       else
-        list = x[0..anArray.size-1]
+          list = x[0..anArray.size-1]
       end
 
-      anArray.zip(x) { |item1, item2|
+      anArray.zip(list) { |item1, item2|
         if item1.is_a?(Symbol)
           evaluations << item1.call(item2)
         else
-          if val(item1).call(item2)
-            raise NoMatchingFoundException
-          end
+          raise NoMatchingFoundException unless val(item1).call(item2)
         end
 
       }
       Evaluation.new { evaluations.each { |evaluation| instance_exec(&evaluation) } }
+      rescue NoMatchingFoundException
+        false
+      end
+
     }
   end
 
