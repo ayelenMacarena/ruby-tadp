@@ -59,9 +59,8 @@ class Matching
         matchers.select { |match| match.call(x)!=true }.each { |evaluation|
           instance_exec(&(evaluation.call(x))) }
         instance_exec(&block)
-        true
       else
-        false
+        'noMatch'
       end
 
 
@@ -70,18 +69,17 @@ class Matching
   end
 
   def otherwise (&block)
-    Evaluation.new { |x| e1.ejecuta(&block) }
+    self.evaluations<<Evaluation.new {  instance_exec(&block) }
   end
 
-  def matches?(algo, &bloque)
+  def match?(algo, &bloque)
     instance_exec(&bloque)
     self.evaluations.each { |evaluation|
-      if (evaluation.call(algo))
+      if (evaluation.call(algo)!='noMatch')
         break
       end
 
     }
-    self.evaluations.clear
   end
 
 
@@ -110,12 +108,15 @@ class Symbol
     a=self
     Proc.new { singleton_class.send(:attr_accessor, a)
     send("#{a}=".to_sym, valor) }
-    #  Proc.new{setea(a,valor)}
   end
 end
+module Pattern_matching
 
-peterMachine=Matching.new()
-
+  def matches?(x, &block)
+    Matching.new().match?(x, &block)
+end
+end
+include Pattern_matching
 
 
 
