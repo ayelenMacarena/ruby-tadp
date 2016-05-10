@@ -2,7 +2,21 @@ require 'rspec'
 require_relative '../src/patternMaching.rb'
 
 describe 'pattern Matching tests' do
-
+  it 'primer matches? del enunciado' do
+    expect(matches?([1,2,3])do
+      with(list([:a,val(2),duck(:+)])) {a+2}
+      with(list([1,2,3])) {'aca no llego'}
+      otherwise{'aca no llego'}
+    end).to be(3)
+  end
+  it 'segundo matches? del enunciado' do
+    x=Object.new
+    x.send(:define_singleton_method, :hola) {'hola'}
+    (matches?(x)do
+      with(duck(:hola)) {'chau'}
+      with(type(Object)) {'aca no llego'}
+    end).should eq('chau')
+  end
   it 'matchea y compara el tamaño de listas' do
     an_array = [1, 2, 3, 4]
     # list([1, 2, 3, 4], true).call(an_array) #=> true

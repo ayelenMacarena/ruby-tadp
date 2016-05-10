@@ -22,7 +22,7 @@ class Matching
   end
 
   def list(anArray, compare_size=true)
-    Proc.new { |x|
+    Evaluation.new { |x|
       begin
       evaluations = []
       list = []
@@ -37,12 +37,12 @@ class Matching
       end
 
       anArray.zip(list) { |item1, item2|
+
         if item1.is_a?(Symbol)
           evaluations << item1.call(item2)
         else
-          raise NoMatchingFoundException unless val(item1).call(item2)
+          raise NoMatchingFoundException unless val(item1).call(item2)|| item1.is_a?(Evaluation)? item1.call(item2):false
         end
-
       }
       Evaluation.new { evaluations.each { |evaluation| instance_exec(&evaluation) } }
       rescue NoMatchingFoundException
@@ -74,12 +74,10 @@ class Matching
 
   def match?(algo, &bloque)
     instance_exec(&bloque)
-    self.evaluations.each { |evaluation|
-      if (evaluation.call(algo)!='noMatch')
-        break
-      end
+    self.evaluations.detect{ |evaluation|
+      evaluation.call(algo)!='noMatch'
 
-    }
+    }.call(algo)
   end
 
 
