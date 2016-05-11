@@ -1,115 +1,119 @@
-module MatchesSpace
+class NoMatchingFoundException < Exception
 
-  def matches
-
-  end
 end
-
-class Entorno
-  def setea(symbol,valor)
-    self.singleton_class.send(:attr_accessor, symbol)
-    self.send("#{symbol}=".to_sym,valor)
-  end
-  def ejecuta(&block)
-    instance_exec(&block)
-  end
-end
-
-module ConstModule
-  e1=Entorno.new
-  E1=e1
-end
-
-include ConstModule
 
 class Matching
-  attr_accessor :e1
+  attr_accessor :evaluations
+
+  def initialize()
+    @evaluations=[]
+  end
 
   def val(parametro)
-    Evaluation.new{|x| x == parametro}
+    Evaluation.new { |x| x == parametro }
   end
 
   def type(unTipo)
-    Evaluation.new{|x| x.class.ancestors.include?(unTipo)}
+    Evaluation.new { |x| x.class.ancestors.include?(unTipo) }
   end
 
   def duck(*methods)
-    Evaluation.new{|x| methods.all?{|m| x.methods.include?(m)}}
+    Evaluation.new { |x| methods.all? { |m| x.methods.include?(m) } }
   end
 
   def list(anArray, compare_size=true)
-    Proc.new{|x|
-      size = anArray.size;
-      valid = compareElements(anArray,x[0..size-1]);
-      if compare_size
-        (size==(x.size)) && valid
-      else
-        valid
-      end
-    }
-  end
+    Evaluation.new { |x|
+      begin
+        evaluations = []
+        list = []
+        if compare_size
+          if anArray.size == x.size
+            list = x
+          else
+            false
+          end
+        else
+          list = x[0..anArray.size-1]
+        end
 
-  def compareElements(array1, array2)
-    i=-1;
-    array1.all? { |item|
-      i+=1
-      t=item
-      if t.instance_of?(Symbol)
-        item.call(array2[i])
-      else
-        val(item).call(array2[i])
+        anArray.zip(list) { |item1, item2|
+
+          if item1.is_a?(Symbol)
+            evaluations << item1.call(item2)
+          else
+            raise NoMatchingFoundException unless val(item1).call(item2)|| item1.is_a?(Evaluation)? item1.call(item2):false
+          end
+        }
+        Evaluation.new { evaluations.each { |evaluation| instance_exec(&evaluation) } }
+      rescue NoMatchingFoundException
+        false
       end
 
     }
   end
 
   def with(*matchers, &block)
-    Evaluation.new{|x| Evaluation.new{|x| true}.and(*matchers).call(x)? e1.ejecuta(&block) : nil}
+
+    self.evaluations<< Evaluation.new { |x|
+      if (Evaluation.new { |x| true }.and(*matchers).call(x))
+        matchers.select { |match| match.call(x)!=true }.each { |evaluation|
+          instance_exec(&(evaluation.call(x))) }
+        instance_exec(&block)
+      else
+        'noMatch'
+      end
+
+
+    }
+
   end
 
   def otherwise (&block)
-    Evaluation.new{|x| e1.ejecuta(&block)}
+    self.evaluations<<Evaluation.new {  instance_exec(&block) }
   end
 
-  #def match?(algo, &bloque)
-  #bloque.call(algo)
-  #end
+  def match?(algo, &bloque)
+    instance_exec(&bloque)
+    self.evaluations.detect{ |evaluation|
+      evaluation.call(algo)!='noMatch'
+
+    }.call(algo)
+  end
 
 
 end
 
 class Evaluation < Proc
 
-  def append(unEvaluation, *evaluations)
-    #todo: hacer un append de nuestros evaaluations.
-  end
 
   def and(*otherEvaluations)
-    Evaluation.new{|x| self.call(x) && otherEvaluations.all?{|eval| eval.call(x)}}
+    Evaluation.new { |x| self.call(x) && otherEvaluations.all? { |eval| eval.call(x) } }
   end
 
   def or(*evaluations)
-    Evaluation.new{|x| self.call(x) || evaluations.any?{|eval| eval.call(x)}}
+    Evaluation.new { |x| self.call(x) || evaluations.any? { |eval| eval.call(x) } }
   end
 
   def not
-    Evaluation.new{|x| not self.call(x)}
+    Evaluation.new { |x| not self.call(x) }
   end
 
 end
 
 class Symbol
 
-  def call(valor, entorno=E1)
-    entorno.setea(self,valor)
+  def call(valor)
+    a=self
+    Proc.new { singleton_class.send(:attr_accessor, a)
+    send("#{a}=".to_sym, valor) }
   end
 end
 
+module Pattern_matching
 
-peterMachine=Matching.new
-peterMachine.e1=E1
-irb peterMachine
+  def matches?(x, &block)
+    Matching.new().match?(x, &block)
+  end
+end
 
-
-
-
+include Pattern_matching

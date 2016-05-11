@@ -3,16 +3,19 @@ require_relative '../src/patternMaching.rb'
 
 describe 'pattern Matching tests' do
 
+=begin
   it 'matchea y compara el tamaño de listas' do
     an_array = [1, 2, 3, 4]
     # list([1, 2, 3, 4], true).call(an_array) #=> true
     expect(list([1, 2, 3, 4], true).call(an_array)).to be(true)
   end
+
   it 'matchea pero no compara el tamaño de listas' do
     an_array = [1, 2, 3, 4]
     #list([1, 2, 3, 4], false).call(an_array) #=> true
     expect(list([1, 2, 3, 4], false).call(an_array)).to be(true)
   end
+
   it 'matchea y compara el tamaño de las listas, falla' do
     an_array = [1, 2, 3, 4]
     #list([1, 2, 3], true).call(an_array) #=> false
@@ -39,4 +42,28 @@ describe 'pattern Matching tests' do
     #list([1, 2, 3]).call(an_array) #=> false
     expect(list([1, 2, 3]).call(an_array)).to be(false)
   end
+end
+
+=end
+
+  it 'primer matches? del enunciado' do
+    expect(matches?([1,2,3])do
+      with(list([:a,val(2),duck(:+)])) {a+2}
+      with(list([1,2,3])) {'aca no llego'}
+      otherwise{'aca no llego'}
+    end).to be(3)
+  end
+  it 'segundo matches? del enunciado' do
+    x=Object.new
+    x.send(:define_singleton_method, :hola) {'hola'}
+    (matches?(x)do
+      with(duck(:hola)) {'chau'}
+      with(type(Object)) {'aca no llego'}
+    end).should eq('chau')
+  end
+
+  it '' do
+
+  end
+
 end
