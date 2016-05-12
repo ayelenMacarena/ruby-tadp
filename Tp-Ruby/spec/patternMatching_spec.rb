@@ -53,6 +53,7 @@ end
       otherwise{'aca no llego'}
     end).to be(3)
   end
+
   it 'segundo matches? del enunciado' do
     x=Object.new
     x.send(:define_singleton_method, :hola) {'hola'}
@@ -62,8 +63,23 @@ end
     end).should eq('chau')
   end
 
-  it '' do
-
+  it 'Tercer matches? del enunciado (Otherwise)' do
+    x=2
+    (matches?(x) do
+      with(type(String)) {a+2}
+      with(list([1,2,3])) {'aca no llego'}
+      otherwise{'aca si llega'}
+    end).should eq('aca si llega')
   end
+
+=begin
+  it 'lista sin boolean' do
+    expect(
+        Matching.new.list([1,2,3]).call([1,2,3])
+    ).should eq()
+  end
+=end
+
+
 
 end

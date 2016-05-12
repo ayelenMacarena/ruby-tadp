@@ -2,7 +2,9 @@ class NoMatchingFoundException < Exception
 
 end
 
+
 class Matching
+
   attr_accessor :evaluations
 
   def initialize()
@@ -14,7 +16,7 @@ class Matching
   end
 
   def type(unTipo)
-    Evaluation.new { |x| x.class.ancestors.include?(unTipo) }
+    Evaluation.new { |x| x.class.is_a?(unTipo) }
   end
 
   def duck(*methods)
@@ -30,7 +32,8 @@ class Matching
           if anArray.size == x.size
             list = x
           else
-            false
+           false
+           #break
           end
         else
           list = x[0..anArray.size-1]
@@ -41,7 +44,9 @@ class Matching
           if item1.is_a?(Symbol)
             evaluations << item1.call(item2)
           else
-            raise NoMatchingFoundException unless val(item1).call(item2)|| item1.is_a?(Evaluation)? item1.call(item2):false
+            raise NoMatchingFoundException unless self.val(item1).call(item2)|| if(item1.is_a?(Evaluation))
+                                                                               item1.call(item2)
+                                                                                end
           end
         }
         Evaluation.new { evaluations.each { |evaluation| instance_exec(&evaluation) } }
@@ -55,17 +60,14 @@ class Matching
   def with(*matchers, &block)
 
     self.evaluations<< Evaluation.new { |x|
-      if (Evaluation.new { |x| true }.and(*matchers).call(x))
+      if (matchers.all?{ |m| m.call(x)})
         matchers.select { |match| match.call(x)!=true }.each { |evaluation|
           instance_exec(&(evaluation.call(x))) }
         instance_exec(&block)
       else
         'noMatch'
       end
-
-
     }
-
   end
 
   def otherwise (&block)
@@ -76,15 +78,12 @@ class Matching
     instance_exec(&bloque)
     self.evaluations.detect{ |evaluation|
       evaluation.call(algo)!='noMatch'
-
     }.call(algo)
   end
-
-
 end
 
-class Evaluation < Proc
 
+class Evaluation < Proc
 
   def and(*otherEvaluations)
     Evaluation.new { |x| self.call(x) && otherEvaluations.all? { |eval| eval.call(x) } }
@@ -99,6 +98,7 @@ class Evaluation < Proc
   end
 
 end
+
 
 class Symbol
 
