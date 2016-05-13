@@ -3,48 +3,63 @@ require_relative '../src/patternMaching.rb'
 
 describe 'pattern Matching tests' do
 
-=begin
-  it 'matchea y compara el tamaño de listas' do
+  it 'matchea y compara el tamanio de listas' do
     an_array = [1, 2, 3, 4]
-    # list([1, 2, 3, 4], true).call(an_array) #=> true
-    expect(list([1, 2, 3, 4], true).call(an_array)).to be(true)
+    expect(matches?(an_array)do
+      with(list([1, 2, 3, 4], true)) {true}
+      otherwise{false}
+    end).to be(true)
   end
 
-  it 'matchea pero no compara el tamaño de listas' do
+
+  it 'matchea pero no compara el tamanio de listas' do
     an_array = [1, 2, 3, 4]
-    #list([1, 2, 3, 4], false).call(an_array) #=> true
-    expect(list([1, 2, 3, 4], false).call(an_array)).to be(true)
+    expect(matches?(an_array)do
+      with(list([1, 2, 3, 4], false)) {true}
+      otherwise{false}
+    end).to be(true)
   end
 
-  it 'matchea y compara el tamaño de las listas, falla' do
+  it 'matchea y compara el tamanio de las listas, falla' do
     an_array = [1, 2, 3, 4]
-    #list([1, 2, 3], true).call(an_array) #=> false
-    expect(list([1, 2, 3], true).call(an_array)).to be(false)
+    expect(matches?(an_array)do
+      with(list([1, 2, 3], true)) {true}
+      otherwise{false}
+    end).to be(false)
   end
-  it 'no compara el tamaño de la lista, matchea' do
+
+  it 'no compara el tamanio de la lista, matchea' do
     an_array = [1, 2, 3, 4]
-    #list([1, 2, 3], false).call(an_array) #=> false
-    expect(list([1, 2, 3], false).call(an_array) ).to be(true)
+    expect(matches?(an_array)do
+      with(list([1, 2, 3], false)) {true}
+      otherwise{false}
+    end).to be(true)
   end
+
   it 'compara con una lista en distinto orden, falla' do
     an_array = [1, 2, 3, 4]
-    #list([2, 1, 3, 4], true).call(an_array) #=> false
-    expect(list([2, 1, 3, 4], true).call(an_array)).to be(false)
+    expect(matches?(an_array)do
+      with(list([2, 1, 3, 4], true)) {true}
+      otherwise{false}
+    end).to be(false)
   end
-  it 'no compara por tamaño pero falla al estar en distinto orden' do
+
+  it 'no compara por tamanio pero falla al estar en distinto orden' do
     an_array = [1, 2, 3, 4]
-    #list([2, 1, 3, 4], false).call(an_array) #=> false
-    expect(list([2, 1, 3, 4], false).call(an_array)).to be(false)
+    expect(matches?(an_array)do
+      with(list([2, 1, 3, 4], false)) {true}
+      otherwise{false}
+    end).to be(false)
+
   end
   it 'compara una lista aunque no le pases el bool, falla' do
     an_array = [1, 2, 3, 4]
-    #Si no se especifica, match_size? se considera true
-    #list([1, 2, 3]).call(an_array) #=> false
-    expect(list([1, 2, 3]).call(an_array)).to be(false)
+    expect(matches?(an_array)do
+      with(list([1, 2, 3])) {true}
+      otherwise{false}
+    end).to be(false)
   end
-end
 
-=end
 
   it 'primer matches? del enunciado' do
     expect(matches?([1,2,3])do

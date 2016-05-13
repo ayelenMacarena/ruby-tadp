@@ -43,7 +43,7 @@ class Matching
           if item1.is_a?(Symbol)
             evaluations << item1.call(item2)
           else if item1.is_a?(Evaluation)
-                 item1.call(item2)
+                 raise NoMatchingFoundException unless  item1.call(item2)
                else
             raise NoMatchingFoundException unless self.val(item1).call(item2)
                end
