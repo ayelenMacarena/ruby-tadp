@@ -32,8 +32,7 @@ class Matching
           if anArray.size == x.size
             list = x
           else
-           false
-           #break
+            raise NoMatchingFoundException
           end
         else
           list = x[0..anArray.size-1]
@@ -43,10 +42,11 @@ class Matching
 
           if item1.is_a?(Symbol)
             evaluations << item1.call(item2)
-          else
-            raise NoMatchingFoundException unless self.val(item1).call(item2)|| if(item1.is_a?(Evaluation))
-                                                                               item1.call(item2)
-                                                                                end
+          else if item1.is_a?(Evaluation)
+                 item1.call(item2)
+               else
+            raise NoMatchingFoundException unless self.val(item1).call(item2)
+               end
           end
         }
         Evaluation.new { evaluations.each { |evaluation| instance_exec(&evaluation) } }
@@ -76,9 +76,15 @@ class Matching
 
   def match?(algo, &bloque)
     instance_exec(&bloque)
-    self.evaluations.detect{ |evaluation|
+    first_good_evaluation = self.evaluations.detect{ |evaluation|
       evaluation.call(algo)!='noMatch'
-    }.call(algo)
+    }
+    if first_good_evaluation.nil?
+      raise NoMatchingFoundException
+    else
+    first_good_evaluation.call(algo)
+    end
+
   end
 end
 
