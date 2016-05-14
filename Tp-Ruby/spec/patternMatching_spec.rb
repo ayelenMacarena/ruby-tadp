@@ -3,6 +3,14 @@ require_relative '../src/patternMaching.rb'
 
 describe 'pattern Matching tests' do
 
+  class Defensor
+  end
+
+  class Atacante
+  end
+
+  un_atacante = Atacante.new
+
   it 'prueba val acierto de Fixnum' do
     x = 5
     expect(matches?(x) do
@@ -175,6 +183,27 @@ describe 'pattern Matching tests' do
     end).to be(true)
   end
 
+  it 'utiliza el and para unir matcheos' do
+    expect(matches?(un_atacante)do
+      with(type(Object).and(type(Atacante))){true}
+      otherwise{false}
+    end).to be(true)
+  end
+
+  it 'utiliza el or para unir matcheos' do
+    expect(matches?(un_atacante) do
+      with(type(Defensor).or(type(Atacante))){true}
+      otherwise{false}
+    end).to be(true)
+  end
+
+  it 'utiliza el not para unir matcheos' do
+    expect(matches?(un_atacante) do
+      with((type(Defensor)).not){true}
+      otherwise{false}
+    end).to be(true)
+  end
+
   it 'primer matches? del enunciado' do
     expect(matches?([1,2,3])do
       with(list([:a,val(2),duck(:+)])) {a+2}
@@ -201,7 +230,6 @@ describe 'pattern Matching tests' do
     end).should eq('aca si llega')
   end
 
-
   it 'lista sin boolean' do
     my_array = [1,2,3]
     expect(matches?(my_array)do
@@ -210,7 +238,6 @@ describe 'pattern Matching tests' do
     end).to be (true)
   end
 
-
   it 'list con symbol y array sin booleano' do
     an_array = [1, 2, 3, 4]
     expect(matches?(an_array)do
@@ -218,7 +245,5 @@ describe 'pattern Matching tests' do
       otherwise{true}
     end).to be(true)
   end
-
-
 
 end
