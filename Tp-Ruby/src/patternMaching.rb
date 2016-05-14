@@ -5,10 +5,11 @@ end
 
 class Matching
 
-  attr_accessor :evaluations
+  attr_accessor :evaluations, :binders
 
   def initialize()
     @evaluations=[]
+    @binders = []
   end
 
   def val(parametro)
@@ -49,7 +50,8 @@ class Matching
                end
           end
         }
-        Evaluation.new { evaluations.each { |evaluation| instance_exec(&evaluation) } }
+        self.binders<<Evaluation.new { evaluations.each { |evaluation| instance_exec(&evaluation) } }
+        true
       rescue NoMatchingFoundException
         false
       end
@@ -60,9 +62,10 @@ class Matching
   def with(*matchers, &block)
 
     self.evaluations<< Evaluation.new { |x|
+      self.binders=[]
       if (matchers.all?{ |m| m.call(x)})
-        matchers.select { |match| match.call(x)!=true }.each { |evaluation|
-          instance_exec(&(evaluation.call(x))) }
+        self.binders.each { |evaluation|
+          instance_exec(&evaluation) }
         instance_exec(&block)
       else
         'noMatch'
