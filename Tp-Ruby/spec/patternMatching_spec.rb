@@ -20,6 +20,14 @@ describe 'pattern Matching tests' do
     end). to be {true}
   end
 
+  it 'prueba val Fixnum contra Fixnum distinto: False' do
+    x = 4
+    expect(matches?(x) do
+      with(val(5)){false}
+      otherwise {true}
+    end). to be {true}
+  end
+
   it 'prueba type Integer acierto' do
     x = 5
     expect(matches?(x) do
@@ -46,11 +54,18 @@ describe 'pattern Matching tests' do
     end). to be {true}
   end
 
-
-  it 'prueba val Fixnum contra Fixnum distinto: False' do
-    x = 4
+  it 'prueba duck(Fixnum) acierto' do
+    x = 5
     expect(matches?(x) do
-      with(val(5)){false}
+      with(duck(:+,:<)){true}
+      otherwise {false}
+    end). to be {true}
+  end
+
+  it 'prueba duck(Fixnum) fallo' do
+    x = 5
+    expect(matches?(x) do
+      with(duck(:include?)){false}
       otherwise {true}
     end). to be {true}
   end
@@ -102,8 +117,8 @@ describe 'pattern Matching tests' do
       with(list([2, 1, 3, 4], false)) {true}
       otherwise{false}
     end).to be(false)
-
   end
+
   it 'compara una lista aunque no le pases el bool, falla' do
     an_array = [1, 2, 3, 4]
     expect(matches?(an_array)do
@@ -112,6 +127,53 @@ describe 'pattern Matching tests' do
     end).to be(false)
   end
 
+  it 'prueba and, fallo' do
+    x = 5
+    expect(matches?(x)do
+      with(type(Integer).and(type(String))) {false}
+      otherwise{true}
+    end).to be(true)
+  end
+
+  it 'prueba and, acierto' do
+    x = 5
+    expect(matches?(x)do
+      with(type(Integer).and(type(Fixnum))) {true}
+      otherwise{false}
+    end).to be(true)
+  end
+
+  it 'prueba or, acierto' do
+    x = 5
+    expect(matches?(x)do
+      with(type(Integer).or(type(Array))) {true}
+      otherwise{false}
+    end).to be(true)
+  end
+
+  it 'prueba or, fallo' do
+    x = 5
+    expect(matches?(x)do
+      with(type(String).or(type(Array))) {false}
+      otherwise{true}
+    end).to be(true)
+  end
+
+  it 'prueba not, fallo' do
+    x = 5
+    expect(matches?(x)do
+      with(type(Integer).not) {false}
+      otherwise{true}
+    end).to be(true)
+  end
+
+  it 'prueba not, acierto' do
+    x = 5
+    expect(matches?(x)do
+      with(type(String).not) {true}
+      otherwise{false}
+    end).to be(true)
+  end
 
   it 'primer matches? del enunciado' do
     expect(matches?([1,2,3])do
