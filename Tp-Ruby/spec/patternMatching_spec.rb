@@ -3,6 +3,58 @@ require_relative '../src/patternMaching.rb'
 
 describe 'pattern Matching tests' do
 
+  it 'prueba val acierto de Fixnum' do
+    x = 5
+    expect(matches?(x) do
+      with(val(5)){'Acierto'}
+      otherwise {'por acá no pasa never'}
+    end). to be {'Acierto'}
+  end
+
+
+  it 'prueba val Fixnum contra string noMatch' do
+    x = '5'
+    expect(matches?(x) do
+      with(val(5)){false}
+      otherwise {true}
+    end). to be {true}
+  end
+
+  it 'prueba type Integer acierto' do
+    x = 5
+    expect(matches?(x) do
+      with(type(Integer)){true}
+      otherwise {false}
+    end). to be {true}
+  end
+
+
+  it 'prueba type con symbol fallo' do
+    x = "Hola, quiero ser un symbol pero soy un string"
+    expect(matches?(x) do
+      with(type(Symbol)){false}
+      otherwise {true}
+    end). to be {true}
+  end
+
+
+  it 'prueba type con symbol acierto' do
+    x = :a_symbol
+    expect(matches?(x) do
+      with(type(Symbol)){true}
+      otherwise {false}
+    end). to be {true}
+  end
+
+
+  it 'prueba val Fixnum contra Fixnum distinto: False' do
+    x = 4
+    expect(matches?(x) do
+      with(val(5)){false}
+      otherwise {true}
+    end). to be {true}
+  end
+
   it 'matchea y compara el tamanio de listas' do
     an_array = [1, 2, 3, 4]
     expect(matches?(an_array)do
@@ -87,13 +139,23 @@ describe 'pattern Matching tests' do
     end).should eq('aca si llega')
   end
 
-=begin
+
   it 'lista sin boolean' do
-    expect(
-        Matching.new.list([1,2,3]).call([1,2,3])
-    ).should eq()
+    my_array = [1,2,3]
+    expect(matches?(my_array)do
+      with(list([1,2,3])) {true}
+      otherwise{false}
+    end).to be (true)
   end
-=end
+
+
+  it 'list con symbol y array sin booleano' do
+    an_array = [1, 2, 3, 4]
+    expect(matches?(an_array)do
+      with(list([:a,:b])) {false}
+      otherwise{true}
+    end).to be(true)
+  end
 
 
 

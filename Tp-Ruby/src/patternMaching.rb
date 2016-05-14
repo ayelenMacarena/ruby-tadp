@@ -16,7 +16,7 @@ class Matching
   end
 
   def type(unTipo)
-    Evaluation.new { |x| x.class.is_a?(unTipo) }
+    Evaluation.new { |x| x.is_a?(unTipo) }
   end
 
   def duck(*methods)
