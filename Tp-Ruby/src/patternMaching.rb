@@ -2,11 +2,13 @@ class NoMatchingFoundException < Exception
 
 end
 
-class Matching
-  attr_accessor :evaluations
 
+class Matching
+
+  attr_accessor :evaluations, :binders
   def initialize()
     @evaluations=[]
+    @binders = []
   end
 
   def val(parametro)
@@ -14,7 +16,7 @@ class Matching
   end
 
   def type(unTipo)
-    Evaluation.new { |x| x.class.ancestors.include?(unTipo) }
+    Evaluation.new { |x| x.is_a?(unTipo) }
   end
 
   def duck(*methods)
@@ -24,27 +26,27 @@ class Matching
   def list(anArray, compare_size=true)
     Evaluation.new { |x|
       begin
-      evaluations = []
-      list = []
-      if compare_size
-        if anArray.size == x.size
-          list = x
+        list = []
+        if compare_size
+          if anArray.size == x.size
+            list = x
+          else
+            raise NoMatchingFoundException
+          end
         else
-          false
-        end
-      else
           list = x[0..anArray.size-1]
-      end
-
-      anArray.zip(list) { |item1, item2|
-
-        if item1.is_a?(Symbol)
-          evaluations << item1.call(item2)
-        else
-          raise NoMatchingFoundException unless val(item1).call(item2)|| item1.is_a?(Evaluation)? item1.call(item2):false
         end
-      }
-      Evaluation.new { evaluations.each { |evaluation| instance_exec(&evaluation) } }
+
+        anArray.zip(list) { |item1, item2|
+
+           if item1.respond_to?(:call)
+                 raise NoMatchingFoundException unless  item1.call(item2)
+               else
+            raise NoMatchingFoundException unless self.val(item1).call(item2)
+               end
+
+        }
+        true
       rescue NoMatchingFoundException
         false
       end
@@ -55,17 +57,15 @@ class Matching
   def with(*matchers, &block)
 
     self.evaluations<< Evaluation.new { |x|
-      if (Evaluation.new { |x| true }.and(*matchers).call(x))
-        matchers.select { |match| match.call(x)!=true }.each { |evaluation|
-          instance_exec(&(evaluation.call(x))) }
+      self.binders=[]
+      if (matchers.all?{ |m| m.call(x)})
+        self.binders.each { |evaluation|
+          instance_exec(&evaluation) }
         instance_exec(&block)
       else
         'noMatch'
       end
-
-
     }
-
   end
 
   def otherwise (&block)
@@ -74,17 +74,29 @@ class Matching
 
   def match?(algo, &bloque)
     instance_exec(&bloque)
-    self.evaluations.detect{ |evaluation|
+    first_good_evaluation = self.evaluations.detect{ |evaluation|
       evaluation.call(algo)!='noMatch'
+    }
+    if first_good_evaluation.nil?
+      raise NoMatchingFoundException
+    else
+    first_good_evaluation.call(algo)
+    end
 
-    }.call(algo)
   end
-
-
 end
 
-class Evaluation < Proc
+module Pattern_matching
+  pm=Matching.new
+  PETERMACHINE=pm
+  def matches?(x, &block)
 
+    PETERMACHINE.match?(x, &block)
+  end
+end
+
+
+class Evaluation < Proc
 
   def and(*otherEvaluations)
     Evaluation.new { |x| self.call(x) && otherEvaluations.all? { |eval| eval.call(x) } }
@@ -100,21 +112,15 @@ class Evaluation < Proc
 
 end
 
+
 class Symbol
 
   def call(valor)
     a=self
-    Proc.new { singleton_class.send(:attr_accessor, a)
+    Pattern_matching::PETERMACHINE.binders<<Proc.new { singleton_class.send(:attr_accessor, a)
     send("#{a}=".to_sym, valor) }
   end
 end
-module Pattern_matching
 
-  def matches?(x, &block)
-    Matching.new().match?(x, &block)
-end
-end
+
 include Pattern_matching
-
-
-
