@@ -6,9 +6,15 @@ end
 class Matching
 
   attr_accessor :evaluations, :binders
+
   def initialize()
     @evaluations=[]
     @binders = []
+  end
+
+  def reset()
+    self.evaluations=[]
+    self.binders = []
   end
 
   def val(parametro)
@@ -57,7 +63,7 @@ class Matching
   def with(*matchers, &block)
 
     self.evaluations<< Evaluation.new { |x|
-      self.binders=[]
+      #self.binders=[]
       if (matchers.all?{ |m| m.call(x)})
         self.binders.each { |evaluation|
           instance_exec(&evaluation) }
@@ -73,6 +79,7 @@ class Matching
   end
 
   def match?(algo, &bloque)
+    reset
     instance_exec(&bloque)
     first_good_evaluation = self.evaluations.detect{ |evaluation|
       evaluation.call(algo)!='noMatch'
@@ -87,11 +94,13 @@ class Matching
 end
 
 module Pattern_matching
-  pm=Matching.new
-  PETERMACHINE=pm
+
+  PETERMACHINE=Matching.new
   def matches?(x, &block)
 
     PETERMACHINE.match?(x, &block)
+
+
   end
 end
 
@@ -117,8 +126,9 @@ class Symbol
 
   def call(valor)
     a=self
-    Pattern_matching::PETERMACHINE.binders<<Proc.new { singleton_class.send(:attr_accessor, a)
+    Pattern_matching::PETERMACHINE.binders<< Evaluation.new { singleton_class.send(:attr_accessor, a)
     send("#{a}=".to_sym, valor) }
+    true
   end
 end
 

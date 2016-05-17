@@ -1,4 +1,3 @@
-#<!encoding: utf-8>
 require 'rspec'
 require_relative '../src/patternMaching.rb'
 
@@ -19,7 +18,6 @@ describe 'pattern Matching tests' do
       otherwise {'por acá no pasa never'}
     end). to be {'Acierto'}
   end
-
 
   it 'prueba val Fixnum contra string noMatch' do
     x = '5'
@@ -82,7 +80,7 @@ describe 'pattern Matching tests' do
   it 'matchea y compara el tamanio de listas' do
     an_array = [1, 2, 3, 4]
     expect(matches?(an_array)do
-      with(list([1, 2, 3, 4], true)) {true}
+      with(list([1, 2, 3, 4])) {true}
       otherwise{false}
     end).to be(true)
   end
@@ -112,6 +110,7 @@ describe 'pattern Matching tests' do
     end).to be(true)
   end
 
+
   it 'compara con una lista en distinto orden, falla' do
     an_array = [1, 2, 3, 4]
     expect(matches?(an_array)do
@@ -119,6 +118,7 @@ describe 'pattern Matching tests' do
       otherwise{false}
     end).to be(false)
   end
+
 
   it 'no compara por tamanio pero falla al estar en distinto orden' do
     an_array = [1, 2, 3, 4]
