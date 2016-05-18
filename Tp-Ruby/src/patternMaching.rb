@@ -12,11 +12,6 @@ class Matching
     @binders = []
   end
 
-  def reset()
-    self.evaluations=[]
-    self.binders = []
-  end
-
   def val(parametro)
     Evaluation.new { |x| x == parametro }
   end
@@ -63,7 +58,7 @@ class Matching
   def with(*matchers, &block)
 
     self.evaluations<< Evaluation.new { |x|
-      #self.binders=[]
+      self.binders=[]
       if (matchers.all?{ |m| m.call(x)})
         self.binders.each { |evaluation|
           instance_exec(&evaluation) }
@@ -79,7 +74,6 @@ class Matching
   end
 
   def match?(algo, &bloque)
-    reset
     instance_exec(&bloque)
     first_good_evaluation = self.evaluations.detect{ |evaluation|
       evaluation.call(algo)!='noMatch'
@@ -98,8 +92,9 @@ module Pattern_matching
   PETERMACHINE=Matching.new
   def matches?(x, &block)
 
-    PETERMACHINE.match?(x, &block)
-
+    @rdo=PETERMACHINE.match?(x, &block)
+    PETERMACHINE.evaluations=[]
+    @rdo
 
   end
 end
