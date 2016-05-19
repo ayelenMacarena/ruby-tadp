@@ -6,7 +6,6 @@ end
 class Matching
 
   attr_accessor :evaluations, :binders
-
   def initialize()
     @evaluations=[]
     @binders = []
@@ -26,8 +25,7 @@ class Matching
 
   def list(anArray, compare_size=true)
     Evaluation.new { |x|
-      begin
-        evaluations = []
+      begin #try de la excepcion.
         list = []
         if compare_size
           if anArray.size == x.size
@@ -40,33 +38,27 @@ class Matching
         end
 
         anArray.zip(list) { |item1, item2|
-
-          if item1.is_a?(Symbol)
-            evaluations << item1.call(item2)
-          else if item1.is_a?(Evaluation)
-                 raise NoMatchingFoundException unless  item1.call(item2)
-               else
-            raise NoMatchingFoundException unless self.val(item1).call(item2)
-               end
+          if item1.respond_to?(:call) #Es un matcher? (type val list)
+            raise NoMatchingFoundException unless  item1.call(item2)
+          else
+            raise NoMatchingFoundException unless self.val(item1).call(item2)  #Entra cuando son solo numeros, string, cualquier cosa q no sea matcher.
           end
         }
-        self.binders<<Evaluation.new { evaluations.each { |evaluation| instance_exec(&evaluation) } }
         true
-      rescue NoMatchingFoundException
+      rescue NoMatchingFoundException #catch de la excepcion.
         false
       end
-
     }
   end
 
   def with(*matchers, &block)
 
-    self.evaluations<< Evaluation.new { |x|
+    self.evaluations<< Evaluation.new { |x| #Lleno la lista de Evaluations.
       self.binders=[]
-      if (matchers.all?{ |m| m.call(x)})
+      if (matchers.all?{ |m| m.call(x)})    #Lleno la lista de binders que inicialize vacia.
         self.binders.each { |evaluation|
-          instance_exec(&evaluation) }
-        instance_exec(&block)
+          instance_exec(&evaluation) }      #Ejecuto efectivamente los binders.
+        instance_exec(&block)               #Ejecuto el bloque correspondiente.
       else
         'noMatch'
       end
@@ -78,17 +70,28 @@ class Matching
   end
 
   def match?(algo, &bloque)
-    instance_exec(&bloque)
-    first_good_evaluation = self.evaluations.detect{ |evaluation|
+    instance_exec(&bloque)      #Ejecuto los Withs.
+    first_good_evaluation = self.evaluations.detect{ |evaluation| #Encuentro el primero de los With que hizo match.
       evaluation.call(algo)!='noMatch'
     }
     if first_good_evaluation.nil?
       raise NoMatchingFoundException
     else
-    first_good_evaluation.call(algo)
+      first_good_evaluation.call(algo) #Ejecuta el Evaluation que efectivamente cumplio la condicion.
     end
 
   end
+end
+
+module Pattern_matching
+  PETERMACHINE=Matching.new
+
+  def matches?(x, &block)
+    @rdo=PETERMACHINE.match?(x, &block)
+    PETERMACHINE.evaluations=[]
+    @rdo
+  end
+
 end
 
 
@@ -113,16 +116,11 @@ class Symbol
 
   def call(valor)
     a=self
-    Proc.new { singleton_class.send(:attr_accessor, a)
+    Pattern_matching::PETERMACHINE.binders<<Proc.new { singleton_class.send(:attr_accessor, a)
     send("#{a}=".to_sym, valor) }
+    true
   end
 end
 
-module Pattern_matching
-
-  def matches?(x, &block)
-    Matching.new().match?(x, &block)
-  end
-end
 
 include Pattern_matching
